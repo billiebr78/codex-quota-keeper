@@ -39,8 +39,8 @@ Requisitos: Python **3.11+**; Codex instalado no VS Code ou no terminal. Abra um
 ```powershell
 git clone https://github.com/billiebr78/codex-quota-keeper.git
 cd codex-quota-keeper
-python -m pip install -e .
-cqk doctor
+py -m pip install -e .
+py -m codex_quota_keeper doctor
 ```
 
 Prévia do instalador para um projeto existente (nenhum arquivo é alterado):
@@ -85,6 +85,25 @@ cqk relay --project "C:\caminho\do\seu-projeto" --rounds 2 --sandbox workspace-w
 
 O relay cria **novas** execuções `codex exec`, cada uma lendo `HANDOFF.md`. Não retoma uma sessão existente. Use somente depois de revisar o próximo passo no handoff; ele pode alterar arquivos no projeto. Por padrão, a caixa de areia é **read-only**; `workspace-write` deve ser selecionado explicitamente. Não há execução recorrente ou em segundo plano.
 
+### Windows com a extensão do Codex (sem CLI separado)
+
+Se `python --version` apontar para a Microsoft Store, mas `py --version` encontrar Python 3.11+, não reinstale o Python: use `py -m ...`. O Codex Quota Keeper funciona com a extensão `openai.chatgpt` instalada no VS Code; o CLI separado é opcional para instalação, diagnóstico e hooks (necessário apenas para comandos que executam `codex exec`).
+
+Use uma pasta de teste antes de aplicar qualquer coisa aos seus projetos:
+
+```powershell
+cd D:\Homebrew
+git clone https://github.com/billiebr78/codex-quota-keeper.git
+cd codex-quota-keeper
+py -m pip install -e .
+py -m codex_quota_keeper doctor
+New-Item -ItemType Directory -Force D:\Homebrew\cqk-test | Out-Null
+py -m codex_quota_keeper install --project D:\Homebrew\cqk-test
+# Após conferir a prévia:
+py -m codex_quota_keeper install --project D:\Homebrew\cqk-test --apply
+```
+
+Usar `py -m codex_quota_keeper` evita depender do comando `cqk` no PATH. A ausência de `codex` no PATH não é tratada como ausência da extensão do VS Code.
 ## Quick start (English)
 
 ```sh
