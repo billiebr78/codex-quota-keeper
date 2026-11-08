@@ -9,7 +9,7 @@ Se `python` ativar o alias da Microsoft Store, use `py -m pip install -e .` e `p
 
 `cqk install --project <directory> --apply` modifies only:
 - `<directory>/AGENTS.md` — one delimited, managed block; keeps existing instructions.
-- `<directory>/.codex/hooks.json` — adds `UserPromptSubmit` and `PostToolUse` handlers without removing unrelated handlers.
+- `<directory>/.codex/hooks.json` — adds `UserPromptSubmit`, `PostToolUse` and `PostModelRequest` handlers without removing unrelated handlers.
 - `<directory>/HANDOFF.md` — creates a template only when absent.
 
 `cqk install --scope user --apply` uses `$CODEX_HOME` (by default `~/.codex`), writing `AGENTS.md` and `hooks.json` there. No global handoff is created.
@@ -39,8 +39,11 @@ Codex may disable hooks via `[features] hooks = false`. `cqk doctor` checks for 
 The installed hook handlers use the documented hook event protocol:
 
 - `UserPromptSubmit`: increments a per-session prompt counter.
-- `PostToolUse`: increments a per-session completed-tool counter.
+- `PostToolUse`: increments a per-session completed-tool counter **when the extension emits this event**.
+- `PostModelRequest`: counts model-request attempts, stores a simple outcome tally and adds selected nonnegative integer token fields **only if the current Codex runtime supplies them**. No prompt, tool arguments, model output or error text is saved. These are observed request-level usage counts, not a ChatGPT subscription limit.
 - Only when a milestone is first crossed, returns `hookSpecificOutput.additionalContext` to recommend checking handoff/context.
+
+The model-request hook is diagnostic-only; it produces no assistant-visible context. After updating existing hook configurations, the user must review any changed/new hook in the Codex interface because approval is bound to the hash of the hook definition.
 
 Thresholds are hard-coded in `src/codex_quota_keeper/hooks.py` for v0.1. Counts are **not** exact tokens, spend, requests or account quota. No transcript parsing is required. Only a hash of `session_id` and counters are persisted under `$CODEX_HOME/quota-keeper/state`.
 

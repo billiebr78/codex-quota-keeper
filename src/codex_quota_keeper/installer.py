@@ -15,7 +15,7 @@ from pathlib import Path
 
 START = "<!-- codex-quota-keeper:start -->"
 END = "<!-- codex-quota-keeper:end -->"
-EVENTS = ("UserPromptSubmit", "PostToolUse")
+EVENTS = ("UserPromptSubmit", "PostToolUse", "PostModelRequest")
 MARK = "-m codex_quota_keeper hook"
 
 
@@ -55,18 +55,19 @@ def _remove_block(old: str) -> str:
     return (before.rstrip() + "\n\n" + after.lstrip()).strip() + "\n" if (before + after).strip() else ""
 
 
-def _hook_command() -> dict:
+def _hook_command(event: str) -> dict:
     args = [sys.executable, "-m", "codex_quota_keeper", "hook"]
-    # Windows Codex supports command_windows; command is the portable fallback.
-    return {
+    handler = {
         "type": "command",
         "command": shlex.join(args),
         "commandWindows": subprocess.list2cmdline(args),
         "timeout": 10,
-        "additionalContextLimit": 350,
-        "additionalContextLimit": 350,
         "statusMessage": "Quota Keeper: recording event count",
     }
+    # PostModelRequest has diagnostic-only output; no model context.
+    if event != "PostModelRequest":
+        handler["additionalContextLimit"] = 350
+    return handler
 
 
 def _is_ours(handler: dict) -> bool:
@@ -100,7 +101,7 @@ def _hooks_new(old: str, remove: bool) -> str:
             if kept:
                 cleaned.append({**group, "hooks": kept})
         if not remove:
-            cleaned.append({"hooks": [_hook_command()]})
+            cleaned.append({"hooks": [_hook_command(event)]})
         if cleaned:
             hooks[event] = cleaned
         else:

@@ -28,6 +28,11 @@ class InstallerTests(unittest.TestCase):
         hooks = json.loads((self.root / ".codex" / "hooks.json").read_text())
         self.assertIn("UserPromptSubmit", hooks["hooks"])
         self.assertIn("PostToolUse", hooks["hooks"])
+        self.assertIn("PostModelRequest", hooks["hooks"])
+        self.assertNotIn(
+            "additionalContextLimit",
+            hooks["hooks"]["PostModelRequest"][0]["hooks"][0],
+        )
         handler = hooks["hooks"]["PostToolUse"][0]["hooks"][0]
         self.assertIn("commandWindows", handler)
         self.assertNotIn("command_windows", handler)

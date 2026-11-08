@@ -6,6 +6,7 @@
 - [x] Project/user scoped installation preview, optional apply, backup and uninstall.
 - [x] Native `AGENTS.md` policy and hook integration.
 - [x] Anonymous prompt/tool-count milestones.
+- [x] Diagnostic PostModelRequest attempt/outcome counters with optional token fields, pending real VS Code validation.
 - [x] `codex exec --json` token reports and comparisons of equivalent runs.
 - [x] Optional Codex Skill (manual installation).
 - [x] Handoff template and bounded opt-in CLI relay.

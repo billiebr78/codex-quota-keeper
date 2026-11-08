@@ -22,6 +22,7 @@ Codex Quota Keeper helps keep coding sessions focused and auditable. It offers s
 | --- | --- | --- |
 | User/project policy in `AGENTS.md` | Available | Managed, idempotent block |
 | Prompt/tool-count warnings | Available | Codex `UserPromptSubmit` and `PostToolUse` hooks; *counts*, not tokens |
+| Model-request event counters | Experimental | `PostModelRequest` records attempts, outcomes and optional token fields when emitted by Codex; VS Code validation pending |
 | Token reports from `codex exec --json` | Available | Input, cached input, output, reasoning output where present |
 | Comparative token report | Available | `cqk compare` compares equivalent verified runs |
 | Optional native Codex Skill | Available | `.agents/skills/codex-quota-keeper/SKILL.md` — manual installation |
@@ -55,7 +56,7 @@ Aplicar ao projeto escolhido:
 cqk install --project "C:\caminho\do\seu-projeto" --apply
 ```
 
-Isso adiciona uma seção delimitada em `AGENTS.md`, instala hooks em `.codex/hooks.json` e cria `HANDOFF.md` **apenas se não existir**. Os hooks exigem que o projeto seja confiável no Codex; pode haver confirmação para confiar neles. Reinicie a sessão do Codex depois da instalação.
+Isso adiciona uma seção delimitada em `AGENTS.md`, instala hooks `UserPromptSubmit`, `PostToolUse` e `PostModelRequest` em `.codex/hooks.json` e cria `HANDOFF.md` **apenas se não existir**. Os hooks exigem que o projeto seja confiável no Codex; pode haver confirmação para confiar neles. Reinicie a sessão do Codex depois da instalação.
 
 Outros comandos:
 

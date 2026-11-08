@@ -55,9 +55,8 @@ def process(payload: dict) -> dict | None:
     if event == "PostModelRequest":
         # PostModelRequest is diagnostic-only. Never inject context into model
         # responses and never save prompts, errors, tool arguments or model text.
-        state["model_requests"] = max(0, state.get("model_requests", 0)) + 1 if type(
-            state.get("model_requests", 0)
-        ) is int else 1
+        previous = state.get("model_requests", 0)
+        state["model_requests"] = (previous if type(previous) is int and previous >= 0 else 0) + 1
         status = payload.get("status")
         if status in ("completed", "failed", "cancelled"):
             statuses = state.get("model_status")
