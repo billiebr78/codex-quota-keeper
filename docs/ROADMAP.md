@@ -14,12 +14,22 @@
 - [ ] Integration test with a real current Codex CLI installation.
 - [ ] Validate VS Code extension hook behavior end-to-end on Windows.
 
+## v0.2 — focused agent behavior and minimal VS Code accounting
+
+- [x] Scope-first policy: prompt fidelity, minimal edits, avoid unnecessary architecture, proportional autonomy.
+- [x] Shorter handoff template and Skill guidance tied to verified work.
+- [x] Reuse existing per-session JSON, no SQL or external persistence.
+- [x] Use OS-managed file locking for parallel events; preserve atomic writes.
+- [x] `cqk stats` for local VS Code hook observations and token accounting.
+- [x] Verified `PostModelRequest` token telemetry on one current Windows VS Code installation.
+- [ ] Run a repeated baseline/optimized benchmark of equivalent tasks with passing tests and compare tokens per successful task.
+
 ## Next
 
 1. Benchmark the same verified coding task with and without the managed guidance, comparing *tokens per successful task*.
 2. Add supported version/capability probing; avoid inventing hooks or settings.
 3. Explore persistent lightweight summaries that can be re-read selectively.
-4. Improve cross-process state synchronization and relay cancellation on Windows.
+4. Verify relay cancellation on Windows and maintain low per-event overhead.
 5. Consider a small local-only status display **after** measurements justify its complexity.
 6. Explore safe session-transfer integrations only if officially supported by Codex and the VS Code extension.
 

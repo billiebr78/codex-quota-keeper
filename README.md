@@ -4,7 +4,7 @@
 
 [Português](#início-rápido) · [English](#quick-start-english)
 
-> **Status:** v0.1 — functional, conservative prototype. No measured savings claim; no quota bypass.
+> **Status:** v0.2 — scope-first coding guidance, JSON-only VS Code hook accounting and compact handoffs. No guaranteed token savings or quota bypass.
 
 Codex Quota Keeper helps keep coding sessions focused and auditable. It offers small `AGENTS.md` rules, optional native Codex hooks, JSONL token reports, a handoff template, and an explicitly invoked session relay. It **does not** increase OpenAI usage limits, read account billing, or guarantee lower token consumption.
 
@@ -22,7 +22,9 @@ Codex Quota Keeper helps keep coding sessions focused and auditable. It offers s
 | --- | --- | --- |
 | User/project policy in `AGENTS.md` | Available | Managed, idempotent block |
 | Prompt/tool-count warnings | Available | Codex `UserPromptSubmit` and `PostToolUse` hooks; *counts*, not tokens |
-| Model-request event counters | Experimental | `PostModelRequest` records attempts, outcomes and optional token fields when emitted by Codex; VS Code validation pending |
+| Model-request event counters | Confirmed on VS Code (Windows) | `PostModelRequest` stores observed requests and available token fields |
+| Local session summary | Available | `cqk stats` aggregates existing per-session JSON files, with no database |
+| Concurrency-safe counters | Available | Atomic JSON writes protected by OS-managed per-session file locks |
 | Token reports from `codex exec --json` | Available | Input, cached input, output, reasoning output where present |
 | Comparative token report | Available | `cqk compare` compares equivalent verified runs |
 | Optional native Codex Skill | Available | `.agents/skills/codex-quota-keeper/SKILL.md` — manual installation |
@@ -64,6 +66,8 @@ Outros comandos:
 cqk doctor --project "C:\caminho\do\seu-projeto"
 cqk report "C:\logs\exec.jsonl"
 cqk handoff --project "C:\caminho\do\seu-projeto"
+cqk stats --limit 10
+cqk stats --json
 cqk uninstall --project "C:\caminho\do\seu-projeto" --apply
 ```
 
@@ -105,6 +109,20 @@ py -m codex_quota_keeper install --project D:\Homebrew\cqk-test --apply
 ```
 
 Usar `py -m codex_quota_keeper` evita depender do comando `cqk` no PATH. A ausência de `codex` no PATH não é tratada como ausência da extensão do VS Code.
+
+### Monitoramento local e comportamento do agente
+
+O Quota Keeper registra contadores e os tokens fornecidos pelo evento `PostModelRequest` em arquivos `$CODEX_HOME/quota-keeper/state/<hash>.json`. A v0.2 mantém os arquivos existentes, usa bloqueio de arquivo para impedir incrementos perdidos entre hooks simultâneos e não introduz SQLite ou dependências externas.
+
+```powershell
+py -m codex_quota_keeper stats
+py -m codex_quota_keeper stats --json
+```
+
+O resumo soma apenas tokens de entrada e saída observados. Tokens em cache **já estão incluídos** nos de entrada; tokens de raciocínio **já estão incluídos** nos de saída. Esses números **não** representam porcentagem da franquia de uso, tamanho atual da janela de contexto ou economia comprovada.
+
+A política gerenciada em `AGENTS.md` exige aderência ao pedido, pequenas alterações verificáveis, autonomia proporcional e evitar infraestrutura ou trabalho não solicitados. O `HANDOFF.md` é intencionalmente curto. O instalador não substitui arquivos existentes fora do seu bloco gerenciado, e não sobrescreve handoffs já preenchidos.
+
 ## Quick start (English)
 
 ```sh
@@ -127,7 +145,7 @@ Use `cqk --help` for all commands. For advanced settings, see [Configuration](do
 - Installation is scoped to a selected project unless you deliberately use `--scope user`.
 - Existing `AGENTS.md` and hook definitions are **merged**, not replaced. Before changing an existing file, the installer saves a timestamped backup.
 - Uninstall removes only the managed policy block and identifiable managed hook commands. It leaves user files, handoff data and backups intact.
-- The `cqk hook` command stores only counters and warning milestones keyed by a hash of the session ID. It does not store user prompts or tool arguments.
+- The `cqk hook` command stores only counters, selected token totals and warning milestones keyed by a hash of the session ID. It does not store user prompts or tool arguments.
 - Be conservative with unattended `codex exec` runs. Native hook guards are *advisory*, not a security sandbox.
 
 ## Development

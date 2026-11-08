@@ -17,11 +17,11 @@ VS Code Codex / Codex CLI
               └── cqk relay -> fresh codex exec rounds (explicit opt-in)
 ```
 
-Nothing in v0.1 changes Codex authentication, account quota, sandbox permissions, or billing. All runtime code uses Python 3.11+ standard-library modules.
+Nothing in v0.2 changes Codex authentication, account quota, sandbox permissions, or billing. All runtime code uses Python 3.11+ standard-library modules.
 
 ## Design decisions
 
-**Do not parse private VS Code rollout internals as a core dependency.** They can change between versions. Only `codex exec --json` output is used for token reporting. Hooks use their documented `session_id` and `hook_event_name` fields only.
+**Do not parse private VS Code rollout internals as a core dependency.** They can change between versions. VS Code observations use public hook event fields (`session_id`, `hook_event_name`, optional `status`/`token_usage`), while `codex exec --json` reports remain separately available for CLI workloads.
 
 **Do not assume a universal token price.** Models, caching and subscription quota enforcement differ. Reporting uses the counters given by a completed turn, not an inferred price.
 
@@ -35,7 +35,7 @@ Nothing in v0.1 changes Codex authentication, account quota, sandbox permissions
 
 - Invalid `hooks.json`: refuse installation; leave policy unchanged.
 - Incomplete policy block: refuse installation/uninstall rather than removing unknown text.
-- Hook parse or state error: log nothing and allow Codex to continue (advisory functionality).
+- Hook parse, lock or state error: log nothing and allow Codex to continue (advisory functionality).
 - Unrecognized or absent relay status: stop instead of looping.
 - No handoff progress between relay rounds: stop to prevent duplicate work.
 - Unknown CLI version or feature: `cqk doctor` reports what it can see; it doesn't guess extension capabilities.
@@ -43,7 +43,7 @@ Nothing in v0.1 changes Codex authentication, account quota, sandbox permissions
 ## Current limitations
 
 - Hooks introduce local Python startup overhead for each matched event.
-- Counter state uses atomic file replacement but no cross-process counter lock; simultaneous events may lose increments. Warnings are advisory.
+- Counter state uses atomic JSON replacement plus an OS-managed per-session file lock. A hook that cannot acquire the lock within three seconds silently fails open, so totals may be incomplete during exceptional I/O failure. Warnings are advisory.
 - Manual relay timeout can leave child processes on some platforms; verify processes before retrying.
 - The installation is not a transactional multi-file change. Backups mitigate but cannot eliminate partial-write failures.
 - Unverified Codex CLI or VS Code versions may change event schemas. Run tests in real environments before claiming broad compatibility.

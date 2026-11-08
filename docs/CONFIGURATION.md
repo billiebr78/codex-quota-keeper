@@ -45,7 +45,9 @@ The installed hook handlers use the documented hook event protocol:
 
 The model-request hook is diagnostic-only; it produces no assistant-visible context. After updating existing hook configurations, the user must review any changed/new hook in the Codex interface because approval is bound to the hash of the hook definition.
 
-Thresholds are hard-coded in `src/codex_quota_keeper/hooks.py` for v0.1. Counts are **not** exact tokens, spend, requests or account quota. No transcript parsing is required. Only a hash of `session_id` and counters are persisted under `$CODEX_HOME/quota-keeper/state`.
+The v0.2 thresholds remain deliberately simple constants in `src/codex_quota_keeper/hooks.py` (prompts: 40, 80, 150; tools: 100, 250, 500). There is no additional configuration file, database or service. Per-session aggregate counts and optional token fields are saved in `$CODEX_HOME/quota-keeper/state/<sha256(session_id)>.json`. Existing v0.1 JSON files remain compatible. Writes are atomic and use short OS-managed per-session locks to prevent concurrent hook updates from losing increments. The .lock files may remain on disk but do not store any identifiers or content.
+
+`cqk stats` displays totals across the existing JSON files and the most recent sessions; `cqk stats --json` provides a machine-readable report. These are hook observations, not account balance or context-window percentage. The cached input and reasoning output fields are subsets, not additive.
 
 The command can be exercised locally with a synthetic event:
 

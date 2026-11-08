@@ -12,7 +12,7 @@ import tomllib
 from pathlib import Path
 
 from . import __version__
-from . import hooks, installer, relay, usage
+from . import hooks, installer, relay, state, usage
 
 
 def _vscode_codex_extension() -> str | None:
@@ -125,6 +125,10 @@ def _parser() -> argparse.ArgumentParser:
     compare.add_argument("optimized", type=Path)
     compare.add_argument("--json", action="store_true", help="output structured JSON")
 
+    stats = sub.add_parser("stats", help="summarize observed VS Code hook usage from local JSON files")
+    stats.add_argument("--limit", type=int, default=10, help="maximum recent sessions to display (1-1000)")
+    stats.add_argument("--json", action="store_true", help="output structured JSON")
+
     sub.add_parser("hook", help="Codex lifecycle integration; reads hook JSON from stdin")
 
     run = sub.add_parser("relay", help="explicitly run bounded fresh codex exec sessions")
@@ -161,6 +165,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "compare":
             result = usage.compare([args.baseline], [args.optimized])
             print(json.dumps(result, indent=2) if args.json else usage.format_comparison(result))
+            return 0
+        if args.command == "stats":
+            result = state.summary(limit=args.limit)
+            print(json.dumps(result, indent=2) if args.json else state.format_summary(result))
             return 0
         if args.command == "hook":
             return hooks.main()
