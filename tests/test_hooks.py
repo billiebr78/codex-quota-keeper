@@ -6,106 +6,101 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
 
-from codex_quota_keeper import hooks, settings, storage
+from codex_quota_keeper import hooks, state
 
 
 class HookTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.tmp.cleanup)
-        self.env_patch = patch.dict(os.environ, {"CODEX_HOME": self.tmp.name})
-        self.env_patch.start()
-        self.addCleanup(self.env_patch.stop)
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.environment = patch.dict(os.environ, {"CODEX_HOME": self.temp.name})
+        self.environment.start()
+        self.addCleanup(self.environment.stop)
 
-    def test_counts_only_and_warns_once(self):
+    def test_counts_and_warns_once(self):
         with patch.object(hooks, "PROMPT_THRESHOLDS", (2,)):
-            event = {"hook_event_name": "UserPromptSubmit", "session_id": "private-id",
-                     "prompt": "confidential text"}
-            self.assertIsNone(hooks.process(event))
-            warning = hooks.process(event)
+            payload = {"hook_event_name": "UserPromptSubmit", "session_id": "private-id",
+                       "prompt": "confidential text"}
+            self.assertIsNone(hooks.process(payload))
+            warning = hooks.process(payload)
             self.assertEqual(warning["hookSpecificOutput"]["hookEventName"], "UserPromptSubmit")
             self.assertIn("2 prompts", warning["hookSpecificOutput"]["additionalContext"])
-            self.assertIsNone(hooks.process(event))
-        report = storage.history()
-        self.assertEqual(report["sessions_total"], 1)
-        self.assertEqual(report["totals"]["prompts"], 3)
-        self.assertFalse(hooks.state_path("private-id").exists())
-        raw_db = storage.db_path().read_bytes()
-        self.assertNotIn(b"confidential", raw_db)
-        self.assertNotIn(b"private-id", raw_db)
+            self.assertIsNone(hooks.process(payload))
+        path = hooks.state_path("private-id")
+        saved = path.read_text(encoding="utf-8")
+        self.assertEqual(json.loads(saved)["prompts"], 3)
+        self.assertNotIn("private-id", str(path))
+        self.assertNotIn("confidential", saved)
 
-    def test_model_request_metrics_are_diagnostic_only(self):
-        event = {
+    def test_model_request_metrics_no_private_content(self):
+        payload = {
             "hook_event_name": "PostModelRequest", "session_id": "session-1",
-            "status": "completed", "error": "should not save",
+            "status": "completed", "prompt": "secret prompt",
+            "error": "secret error",
             "token_usage": {
                 "input_tokens": 120, "cached_input_tokens": 50,
                 "output_tokens": 40, "reasoning_output_tokens": 7,
-                "unknown_text": "should not save",
-            }, "prompt": "should not save",
+                "unknown": "private content",
+            },
         }
-        self.assertIsNone(hooks.process(event))
+        self.assertIsNone(hooks.process(payload))
         self.assertIsNone(hooks.process({
             "hook_event_name": "PostModelRequest", "session_id": "session-1",
-            "status": "failed", "token_usage": None,
+            "status": "failed", "token_usage": {"input_tokens": -2, "output_tokens": True},
         }))
-        report = storage.history()
-        result = report["sessions"][0]
+        result = json.loads(hooks.state_path("session-1").read_text())
         self.assertEqual(result["model_requests"], 2)
-        self.assertEqual(result["model_status"]["completed"], 1)
-        self.assertEqual(result["model_status"]["failed"], 1)
+        self.assertEqual(result["model_status"], {"completed": 1, "failed": 1})
         self.assertEqual(result["model_tokens"]["input_tokens"], 120)
         self.assertEqual(result["model_tokens"]["cached_input_tokens"], 50)
         self.assertEqual(result["token_usage_reports"], 1)
-        raw = storage.db_path().read_bytes()
-        self.assertNotIn(b"should not save", raw)
+        raw = hooks.state_path("session-1").read_bytes()
+        self.assertNotIn(b"secret", raw)
+        self.assertNotIn(b"private content", raw)
         self.assertNotIn(b"session-1", raw)
 
-    def test_legacy_import_once_and_history_no_duplication(self):
-        legacy = hooks.state_path("old-private")
-        legacy.parent.mkdir(parents=True)
-        legacy.write_text(json.dumps({
-            "prompts": 4, "tools": 3, "announced": ["prompts-2"],
-            "model_requests": 1, "model_tokens": {"input_tokens": 100},
-            "prompt": "PRIVATE",
-        }), encoding="utf-8")
-        self.assertEqual(storage.history()["totals"]["prompts"], 4)
-        hooks.process({"session_id": "old-private", "hook_event_name": "UserPromptSubmit"})
-        report = storage.history()
-        self.assertEqual(report["sessions_total"], 1)
-        self.assertEqual(report["totals"]["prompts"], 5)
-        self.assertEqual(report["totals"]["model_tokens"]["input_tokens"], 100)
-        self.assertEqual(report["sessions"][0]["source"], "sqlite")
-        self.assertEqual(json.loads(legacy.read_text())["prompts"], 4)
-
-    def test_simultaneous_updates_do_not_lose_counts(self):
-        event = {"hook_event_name": "PostToolUse", "session_id": "parallel-private"}
-        with ThreadPoolExecutor(max_workers=8) as pool:
-            list(pool.map(hooks.process, [event] * 40))
-        self.assertEqual(storage.history()["totals"]["tools"], 40)
-
-    def test_configurable_alerts_and_validation(self):
-        path, created = settings.init()
-        self.assertTrue(created)
-        self.assertFalse(settings.init()[1])
+    def test_existing_json_is_incremented_without_migration(self):
+        path = hooks.state_path("old")
+        path.parent.mkdir(parents=True)
         path.write_text(json.dumps({
-            "alerts": {"prompts": [1], "tools": []}, "warnings_enabled": True
-        }))
-        result = hooks.process({"hook_event_name": "UserPromptSubmit", "session_id": "new"})
-        self.assertIn("1 prompts", result["hookSpecificOutput"]["additionalContext"])
-        self.assertIsNone(hooks.process({"hook_event_name": "UserPromptSubmit", "session_id": "new"}))
-        with self.assertRaises(ValueError):
-            settings.validate({"alerts": {"prompts": [2, 1]}})
-        with self.assertRaises(ValueError):
-            settings.validate({"alerts": {"tools": [True]}})
-        with self.assertRaises(ValueError):
-            settings.validate({"warnings_enabled": "false"})
+            "prompts": 2, "tools": 4, "announced": ["prompts-40"],
+            "model_requests": 6,
+            "model_tokens": {"input_tokens": 123739, "cached_input_tokens": 104448,
+                             "output_tokens": 622, "reasoning_output_tokens": 153},
+        }), encoding="utf-8")
+        hooks.process({"hook_event_name": "UserPromptSubmit", "session_id": "old"})
+        hooks.process({"hook_event_name": "PostToolUse", "session_id": "old"})
+        stored = json.loads(path.read_text())
+        self.assertEqual(stored["prompts"], 3)
+        self.assertEqual(stored["tools"], 5)
+        self.assertEqual(stored["model_requests"], 6)
+        self.assertEqual(stored["model_tokens"]["input_tokens"], 123739)
+        report = state.summary()
+        self.assertEqual(report["totals"]["prompts"], 3)
+        self.assertEqual(report["totals"]["model_tokens"]["input_tokens"], 123739)
 
-    def test_malformed_event_is_ignored(self):
+    def test_concurrent_updates_keep_all_counts(self):
+        event = {"hook_event_name": "PostToolUse", "session_id": "parallel"}
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            list(executor.map(hooks.process, [event] * 32))
+        self.assertEqual(state.summary()["totals"]["tools"], 32)
+
+    def test_summary_limit_only_changes_recent_list(self):
+        for i in range(3):
+            hooks.process({"hook_event_name": "UserPromptSubmit", "session_id": f"session-{i}"})
+        report = state.summary(limit=1)
+        self.assertEqual(report["sessions_total"], 3)
+        self.assertEqual(report["totals"]["prompts"], 3)
+        self.assertEqual(len(report["sessions"]), 1)
+        self.assertIn("Input tokens", state.format_summary(report))
+        with self.assertRaises(ValueError):
+            state.summary(limit=0)
+
+    def test_malformed_is_ignored(self):
         self.assertIsNone(hooks.process({}))
         self.assertIsNone(hooks.process({"hook_event_name": "Stop", "session_id": "x"}))
         self.assertIsNone(hooks.process({"hook_event_name": "PostToolUse", "session_id": ""}))
-        self.assertFalse((Path(self.tmp.name) / "quota-keeper").exists())
+        self.assertFalse((Path(self.temp.name) / "quota-keeper").exists())
 
 
 if __name__ == "__main__":
