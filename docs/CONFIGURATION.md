@@ -53,6 +53,14 @@ No output is expected on the first event. Warnings occur at configured threshold
 
 This does not cover every Codex VS Code interaction. Counting input and cached input separately as additive would overstate total tokens. No claim about money saved or a ChatGPT plan's percentage quota is supported.
 
+## Optional Skill
+
+Copy `.agents/skills/codex-quota-keeper/SKILL.md` from this repository into the target project's `.agents/skills/codex-quota-keeper/SKILL.md`. It is deliberately not installed by `cqk install`, to keep the managed configuration minimal. Request `$codex-quota-keeper` to use it explicitly. Codex discovers project Skills from `.agents/skills` in trusted local repositories.
+
+## Comparative measurement
+
+Use `cqk compare baseline.jsonl optimized.jsonl` **only** when both runs carried out equivalent tasks and correctness was independently verified. The output reports observed token changes, not proven causal savings or plan quota changes. For better measurements, repeat each condition across several tasks and record test results and elapsed time separately.
+
 ## Restore
 
 `cqk uninstall --project <directory> --apply` removes only its managed AGENTS.md block and hook entries. It **does not** delete handoffs, counter files, other hooks or backups. You may manually restore a timestamped `*.cqk-backup-*` if you want the exact original bytes/formatting rather than the semantic merge.
