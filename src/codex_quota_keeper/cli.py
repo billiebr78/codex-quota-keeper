@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -14,15 +15,63 @@ from . import __version__
 from . import hooks, installer, relay, usage
 
 
+def _vscode_codex_extension() -> str | None:
+    """Discover the official extension without requiring a standalone Codex CLI.
+
+    Prefer VS Code's supported extension listing. If 'code' is not on PATH,
+    inspect only the standard local extension directory names.
+    """
+    code = shutil.which("code") or shutil.which("code.cmd")
+    if code:
+        try:
+            process = subprocess.run(
+                [code, "--list-extensions", "--show-versions"],
+                capture_output=True, text=True, encoding="utf-8",
+                errors="replace", timeout=8, check=False,
+            )
+            if process.returncode == 0:
+                for line in process.stdout.splitlines():
+                    value = line.strip()
+                    if value.lower().startswith("openai.chatgpt@"):
+                        version = value.split("@", 1)[1]
+                        if version:
+                            return f"openai.chatgpt@{version} (VS Code extension list)"
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+
+    roots = []
+    custom = os.environ.get("VSCODE_EXTENSIONS")
+    if custom:
+        roots.append(Path(custom).expanduser())
+    roots.extend((Path.home() / ".vscode" / "extensions",
+                  Path.home() / ".vscode-insiders" / "extensions"))
+    for folder in roots:
+        try:
+            names = (item.name for item in folder.iterdir() if item.is_dir())
+            versions = [
+                name.split("-", 1)[1]
+                for name in names if name.lower().startswith("openai.chatgpt-")
+            ]
+            if versions:
+                return f"openai.chatgpt@{sorted(versions)[-1]} (installed extension directory)"
+        except OSError:
+            continue
+    return None
+
+
 def _doctor(project: Path) -> int:
     root = Path(project).expanduser().resolve()
     home = installer.codex_home()
     executable = shutil.which("codex")
+    vscode_extension = _vscode_codex_extension()
     user_cfg = home / "config.toml"
     project_cfg = root / ".codex" / "config.toml"
     print(f"Codex Quota Keeper: {__version__}")
     print(f"Python: {sys.version.split()[0]} ({sys.executable})")
-    print(f"Codex CLI: {executable or 'not found on PATH (VS Code may still be installed)'}")
+    if os.name == "nt":
+        print(f"Python launcher 'py': {shutil.which('py') or 'not found (the running interpreter still works)'}")
+    print(f"Codex VS Code extension: {vscode_extension or 'not detected (may be installed in a different VS Code profile)'}")
+    print(f"Codex CLI: {executable or 'not found on PATH (optional for VS Code; needed for relay/exec reports)'}")
     print(f"CODEX_HOME: {home}")
     print(f"Project: {root} ({'found' if root.is_dir() else 'not found'})")
     for config in (user_cfg, project_cfg):
