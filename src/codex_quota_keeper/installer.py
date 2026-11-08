@@ -61,8 +61,9 @@ def _hook_command() -> dict:
     return {
         "type": "command",
         "command": shlex.join(args),
-        "command_windows": subprocess.list2cmdline(args),
+        "commandWindows": subprocess.list2cmdline(args),
         "timeout": 10,
+        "additionalContextLimit": 350,
         "additionalContextLimit": 350,
         "statusMessage": "Quota Keeper: recording event count",
     }
@@ -72,6 +73,7 @@ def _is_ours(handler: dict) -> bool:
     return isinstance(handler, dict) and (
         MARK in str(handler.get("command", ""))
         or MARK in str(handler.get("command_windows", ""))
+        or MARK in str(handler.get("commandWindows", ""))
     )
 
 
