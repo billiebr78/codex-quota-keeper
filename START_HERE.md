@@ -5,10 +5,10 @@
 O Codex Quota Keeper é um conjunto de ferramentas para sessões eficientes do Codex no VS Code e no terminal. Ele **não desbloqueia cotas** e não é um medidor do limite da assinatura.
 
 1. Instale Python 3.11+ e o Codex no VS Code.
-2. Clone este repositório e execute `python -m pip install -e .`.
-3. Execute `cqk doctor` para conferir o ambiente (somente leitura).
-4. Em **outro projeto**, execute `cqk install --project "CAMINHO_DO_PROJETO"` para visualizar as alterações.
-5. Se aprovar, repita com `--apply`.
+2. Clone este repositório e execute `py -m pip install -e .` no Windows (ou `python3 -m pip install -e .` em macOS/Linux).
+3. Execute `py -m codex_quota_keeper doctor` para conferir o ambiente (somente leitura). Não exige Codex CLI separado quando a extensão oficial está instalada.
+4. Em uma **pasta descartável**, execute `py -m codex_quota_keeper install --project "CAMINHO_DA_PASTA"` para visualizar as alterações.
+5. Se aprovar, repita com `--apply` após revisar a prévia. Nunca faça o primeiro teste num projeto de produção.
 6. Abra uma **nova** conversa do Codex no VS Code para usar as instruções e os hooks instalados.
 7. Preencha o `HANDOFF.md` do projeto quando houver uma etapa longa. Não cole históricos inteiros no novo chat.
 
