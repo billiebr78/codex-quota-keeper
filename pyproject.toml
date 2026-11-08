@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codex-quota-keeper"
+version = "0.1.0"
+description = "Conservative context, handoff and token reporting helpers for Codex"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "Codex Quota Keeper contributors"}]
+keywords = ["codex", "vscode", "tokens", "agents", "handoff"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: OS Independent"
+]
+
+[project.scripts]
+cqk = "codex_quota_keeper.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+codex_quota_keeper = ["templates/*.md"]
