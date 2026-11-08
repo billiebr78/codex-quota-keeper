@@ -137,7 +137,7 @@ cqk report /path/to/codex-exec.jsonl
 
 To enable the optional Codex Skill in another repository, copy the folder `.agents/skills/codex-quota-keeper` from this repository to `<your-project>/.agents/skills/codex-quota-keeper`. Codex discovers the skill when relevant or when you explicitly request `$codex-quota-keeper`. The installer does not install this optional Skill automatically.
 
-Use `cqk --help` for all commands. For advanced settings, see [Configuration](docs/CONFIGURATION.md) and [Architecture](docs/ARCHITECTURE.md).
+Use `cqk --help` for all commands. For advanced settings, see [Configuration](docs/CONFIGURATION.md), [Architecture](docs/ARCHITECTURE.md), and [Efficiency Benchmark](docs/BENCHMARK.md).
 
 ## Safety and uninstall
 

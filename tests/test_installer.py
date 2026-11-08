@@ -74,6 +74,14 @@ class InstallerTests(unittest.TestCase):
             installer.configure(project=self.root, apply=True)
         self.assertFalse((self.root / "AGENTS.md").exists())
 
+    def test_policy_requires_scope_fidelity_and_minimal_changes(self):
+        policy = installer.template("AGENTS.md")
+        self.assertIn("scope", policy)
+        self.assertIn("smallest understandable", policy)
+        self.assertIn("Do not add unrelated", policy)
+        self.assertIn("run focused tests", policy)
+        self.assertIn("HANDOFF.md", policy)
+
     def test_uninstall_without_install_has_no_side_effects(self):
         installer.configure(project=self.root, apply=True, remove=True)
         self.assertFalse((self.root / "AGENTS.md").exists())
