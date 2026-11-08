@@ -71,6 +71,11 @@ def _parser() -> argparse.ArgumentParser:
     report.add_argument("jsonl", type=Path, nargs="+")
     report.add_argument("--json", action="store_true", help="output structured JSON")
 
+    compare = sub.add_parser("compare", help="compare two equivalent codex exec JSONL workloads")
+    compare.add_argument("baseline", type=Path)
+    compare.add_argument("optimized", type=Path)
+    compare.add_argument("--json", action="store_true", help="output structured JSON")
+
     sub.add_parser("hook", help="Codex lifecycle integration; reads hook JSON from stdin")
 
     run = sub.add_parser("relay", help="explicitly run bounded fresh codex exec sessions")
@@ -103,6 +108,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "report":
             result = usage.summarize(args.jsonl)
             print(json.dumps(result, indent=2) if args.json else usage.format_report(result))
+            return 0
+        if args.command == "compare":
+            result = usage.compare([args.baseline], [args.optimized])
+            print(json.dumps(result, indent=2) if args.json else usage.format_comparison(result))
             return 0
         if args.command == "hook":
             return hooks.main()
