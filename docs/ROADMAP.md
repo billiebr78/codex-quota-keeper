@@ -6,7 +6,8 @@
 - [x] Project/user scoped installation preview, optional apply, backup and uninstall.
 - [x] Native `AGENTS.md` policy and hook integration.
 - [x] Anonymous prompt/tool-count milestones.
-- [x] `codex exec --json` token reports.
+- [x] `codex exec --json` token reports and comparisons of equivalent runs.
+- [x] Optional Codex Skill (manual installation).
 - [x] Handoff template and bounded opt-in CLI relay.
 - [x] Offline unit tests and CI for Windows/Linux.
 - [ ] Integration test with a real current Codex CLI installation.
