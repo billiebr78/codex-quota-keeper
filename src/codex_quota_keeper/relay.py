@@ -74,10 +74,6 @@ def run(*, project: Path, handoff: str = "HANDOFF.md", rounds: int = 2,
         raise ValueError("Timeout must be 30..86400 seconds per round")
     if sandbox not in ("read-only", "workspace-write"):
         raise ValueError("Unsupported sandbox")
-    executable = shutil.which("codex")
-    if not executable:
-        raise RuntimeError("Codex CLI not found on PATH; check 'codex --version'")
-
     for index in range(1, rounds + 1):
         before = target.read_text(encoding="utf-8-sig")
         if _done(before):
@@ -86,6 +82,11 @@ def run(*, project: Path, handoff: str = "HANDOFF.md", rounds: int = 2,
         step = _next_step(before)
         if not step or step.startswith("<") or "<ONE" in step:
             raise ValueError("Fill in '## Next exact step' in HANDOFF.md before running relay")
+        # Validate the handoff before requiring the CLI; this also makes the
+        # safety check available on machines with only the VS Code extension.
+        executable = shutil.which("codex")
+        if not executable:
+            raise RuntimeError("Codex CLI not found on PATH; check 'codex --version'")
         cmd = [executable, "exec", "--json", "--sandbox", sandbox]
         if model:
             cmd.extend(["--model", model])
