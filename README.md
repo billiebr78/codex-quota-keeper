@@ -71,6 +71,8 @@ Para gerar dados de uso, rode explicitamente um comando do Codex CLI:
 ```powershell
 codex exec --json "Descreva a estrutura deste projeto" > exec.jsonl
 cqk report exec.jsonl
+# Execute a comparable second task and compare both results:
+cqk compare baseline.jsonl optimized.jsonl
 ```
 
 **Atenção:** o arquivo JSONL pode conter texto, comandos e resultados sensíveis da sessão. Não o publique; ele não é necessário para os hooks.
