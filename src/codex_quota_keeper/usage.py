@@ -67,3 +67,38 @@ def format_report(report: dict) -> str:
         f"Cached share of input:         {report['cache_share_of_input']:.1%}",
         "Not a subscription quota, monetary cost, or verified savings figure.",
     ])
+
+
+def compare(baseline_paths: Iterable[Path], optimized_paths: Iterable[Path]) -> dict:
+    """Compare observed usage for two user-verified equivalent workloads.
+
+    A negative change means fewer tokens. This is correlation, not causation.
+    """
+    baseline = summarize(baseline_paths)
+    optimized = summarize(optimized_paths)
+    metrics = ("input_tokens", "cached_input_tokens", "uncached_input_tokens",
+               "output_tokens", "total_tokens")
+    changes = {}
+    for key in metrics:
+        old, new = baseline[key], optimized[key]
+        changes[key] = {
+            "absolute": new - old,
+            "percent": round(100 * (new - old) / old, 2) if old else None,
+        }
+    return {
+        "baseline": baseline,
+        "optimized": optimized,
+        "changes": changes,
+        "caveat": "Only meaningful for equivalent tasks with independently verified outcomes. Not subscription quota or cost.",
+    }
+
+
+def format_comparison(result: dict) -> str:
+    rows = ["Codex Quota Keeper — usage comparison (baseline -> optimized)"]
+    for key, delta in result["changes"].items():
+        before = result["baseline"][key]
+        after = result["optimized"][key]
+        pct = f"{delta['percent']:+.2f}%" if delta["percent"] is not None else "N/A (zero baseline)"
+        rows.append(f"{key}: {before:,} -> {after:,} ({delta['absolute']:+,}; {pct})")
+    rows.append(result["caveat"])
+    return "\n".join(rows)
