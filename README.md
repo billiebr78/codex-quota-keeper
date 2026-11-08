@@ -23,6 +23,8 @@ Codex Quota Keeper helps keep coding sessions focused and auditable. It offers s
 | User/project policy in `AGENTS.md` | Available | Managed, idempotent block |
 | Prompt/tool-count warnings | Available | Codex `UserPromptSubmit` and `PostToolUse` hooks; *counts*, not tokens |
 | Token reports from `codex exec --json` | Available | Input, cached input, output, reasoning output where present |
+| Comparative token report | Available | `cqk compare` compares equivalent verified runs |
+| Optional native Codex Skill | Available | `.agents/skills/codex-quota-keeper/SKILL.md` — manual installation |
 | Project handoff template | Available | Preserves verified state and exact next step |
 | Optional fresh-session relay | Available | CLI-only, explicit invocation, bounded rounds |
 | Subagent/config tuning | Documented | Suggestion only; never silently modifies `config.toml` |
@@ -92,6 +94,8 @@ cqk install --project /path/to/your-project          # dry run
 cqk install --project /path/to/your-project --apply  # apply, with backups
 cqk report /path/to/codex-exec.jsonl
 ```
+
+To enable the optional Codex Skill in another repository, copy the folder `.agents/skills/codex-quota-keeper` from this repository to `<your-project>/.agents/skills/codex-quota-keeper`. Codex discovers the skill when relevant or when you explicitly request `$codex-quota-keeper`. The installer does not install this optional Skill automatically.
 
 Use `cqk --help` for all commands. For advanced settings, see [Configuration](docs/CONFIGURATION.md) and [Architecture](docs/ARCHITECTURE.md).
 
