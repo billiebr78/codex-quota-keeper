@@ -1,5 +1,10 @@
 # Codex configuration and integration
 
+## Windows e VS Code sem Codex CLI separado
+
+Com a extensão oficial `openai.chatgpt` instalada, o comando `codex` pode não estar disponível no PATH. Diagnóstico, configuração do projeto e hooks do Quota Keeper não dependem desse comando. Apenas o relay e a captura por `codex exec --json` exigem CLI.
+
+Se `python` ativar o alias da Microsoft Store, use `py -m pip install -e .` e `py -m codex_quota_keeper doctor` no terminal do VS Code. O diagnóstico tenta localizar a extensão pela lista do VS Code ou pelos diretórios locais padrão. O resultado não substitui um teste real dos hooks.
 ## Supported installations
 
 `cqk install --project <directory> --apply` modifies only:
