@@ -1,18 +1,16 @@
 ---
 name: codex-quota-keeper
-description: Use when asked to reduce Codex token/context use, inspect Codex Quota Keeper setup, compare Codex JSONL usage, or prepare a safe handoff to a fresh coding session. Do not invoke for ordinary implementation tasks unless the user requests quota or session optimization.
+description: Use on explicit requests to optimize Codex context/tokens, inspect Codex Quota Keeper, compare usage or prepare a handoff. Not for ordinary coding tasks unless requested.
 ---
 
 # Codex Quota Keeper
 
-Use the installed `cqk` CLI where available. Do not install it silently.
+1. Treat the user's task and scope as authoritative. Prefer a minimal verified fix; avoid speculative refactors, dependencies and infrastructure.
+2. For setup, run `cqk doctor`. Preview `cqk install --project <path>` and obtain approval before `--apply`; never install silently.
+3. To reduce overhead, search narrowly before reading large files, limit verbose output and avoid unnecessary delegation. Never omit needed context, verification or tests.
+4. Read `cqk stats` for local Codex VS Code hook observations, or `cqk report <file.jsonl>` for Codex CLI observations. Cached and reasoning tokens are subsets, not additive usage. Neither reports remaining subscription quota.
+5. For a multi-session task, update `HANDOFF.md` with concise verified progress, unresolved work and a single exact next step. Start a new session by reading that file rather than repeating an entire transcript.
+6. To assess savings, compare equivalent tasks and their tests, ideally across repeated runs. Do not present a smaller token total alone as proof of improved efficiency.
+7. `cqk relay` is CLI-only and explicitly opt-in. Do not execute unattended work, change permissions, alter secrets, bypass approvals or deploy without authorization.
 
-1. First run `cqk doctor` for the intended project; inspect the scope, Python interpreter and whether Codex hooks are active.
-2. To configure, run `cqk install --project <absolute-project-path>` **without** `--apply` for a dry-run and review each change with the user. Then request the user's approval before applying.
-3. For context management: search for symbols before reading whole huge files; keep project rules short; preserve the original code for safe edits and run necessary verification.
-4. If work spans sessions, update the existing `HANDOFF.md` with verified progress, commands, outstanding questions and one precise next step. Do not append a raw transcript. A fresh Codex conversation should start by reading that handoff.
-5. When evaluating consumption, use `cqk report <codex-exec-jsonl>` or `cqk compare <baseline-jsonl> <optimized-jsonl>`. These are CLI JSONL observations, **not** the weekly subscription quota or proof of saved money.
-6. For optional `cqk relay`, verify that the handoff is filled and the project trusted. Do not start unattended runs without explicit user authorization; use the least powerful sandbox and bounded rounds.
-7. Never alter account authentication, bypass prompts, sandbox protections or permissions in the name of saving tokens.
-
-If the CLI is unavailable, explain the commands and prepare a safe handoff manually. Do not invent UI controls or hook capabilities.
+If a capability is unavailable, say so; do not invent hooks or UI controls.

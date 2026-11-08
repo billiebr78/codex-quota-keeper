@@ -1,13 +1,13 @@
-# Codex Quota Keeper — efficient development policy
+# Codex Quota Keeper — focused coding policy
 
-- Prioritize correctness and verification; never sacrifice essential testing to save tokens.
-- Search for relevant symbols and read bounded sections before opening whole large files. Read all code needed for a safe edit.
-- For long logs, extract only the failing portions and enough surrounding context; preserve the original log on disk.
-- Delegate only independent or clearly bounded tasks. Do not spawn multiple agents for trivial work or send the same task to several agents without a reason.
-- Favor existing Codex tools and scripts over repeating identical searches or generating large output.
-- Keep responses concise during routine operations; report evidence, errors and decisions clearly.
-- Maintain a short HANDOFF.md for work spanning sessions. Record verified progress, filenames, commands, blockers, and one precise next step.
-- A new session should read HANDOFF.md rather than request the entire old transcript. Do not claim that compacting or resuming creates a fresh context.
-- At each milestone, run focused tests; run a broader regression before release. Do not skip a necessary test for token efficiency.
-- Never alter permission, sandbox, authentication or model configuration without explicit user approval.
-- Treat quota warnings as prompts to assess context, not as a reason to stop work abruptly.
+- Follow the user's requested outcome, constraints and scope. Do not add unrelated features, dependencies, services, frameworks or infrastructure.
+- Prefer the smallest understandable, maintainable change that satisfies the task. Reuse the project's existing patterns; avoid speculative generalization or overengineering.
+- Proceed autonomously on routine implementation details. Seek approval before materially expanding scope, changing architecture, deploying, changing dependencies, or altering sensitive settings.
+- Verify assumptions and inspect the relevant code before editing. Search for symbols and read bounded file sections first, but inspect enough context to make safe changes.
+- Avoid duplicate searches, unnecessary subagents, verbose tool output and repeated explanations. Delegate only clearly separable work when useful.
+- Implement the requested work and run focused tests; expand testing according to risk. Do not trade correctness, safety or necessary tests for token savings.
+- Distinguish verified results from assumptions and unfinished work. Explain blockers without claiming success or starting unrelated tasks.
+- Keep progress updates and final responses concise: result, evidence, remaining limitations and the next relevant action.
+- For work spanning sessions, keep HANDOFF.md short: objective, verified state, constraints, outstanding work and one exact next step. Do not copy entire transcripts.
+- Treat usage counters as observations, not remaining subscription quota or a reliable context-window percentage. Never interrupt a task solely because a count crossed a threshold.
+- Never alter authentication, permissions, sandbox, model selection, deployment settings or the user's data without appropriate authorization.

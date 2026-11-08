@@ -1,36 +1,20 @@
 # HANDOFF — <project / stage>
 
-Updated: <UTC timestamp>
-Objective and definition of done: <short statement>
+Objective / definition of done: <one sentence>
 
-## Verified progress
-- <change, file and test/command that verified it>
+## Verified
+- <completed change, relevant file, test and result>
 
-## Unverified or incomplete
-- <change and why it is not yet verified>
+## Incomplete / blockers
+- <unverified work or obstacle; do not treat as done>
 
-## Decisions / constraints
-- <do not revisit without new evidence>
+## Decisions / scope
+- <constraints and choices not to reopen without evidence>
 
-## Next exact step
-<ONE action with the file or command and expected result>
-
-## Then
-1. <second action>
-2. <third action>
-
-## Outstanding questions
-- <question, and safe action while unanswered>
+## Next step
+<one exact action, file or command, and expected result>
 
 ## Verification
-- <tests to run, expected result>
+<focused tests or checks required before completion>
 
-## Locations
-- Code: <path>
-- Logs: <path>
-- Outputs: <path>
-
-## Safety
-Never silently publish, deploy, change credentials, or bypass approvals.
-
-<!-- When the whole stage has been verified, change the first line to: STAGE DONE -->
+<!-- Keep this factual and short. No raw transcript, credentials or speculative tasks. -->
