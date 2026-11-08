@@ -153,7 +153,12 @@ def configure(*, project: Path, scope: str = "project", apply: bool = False, rem
     old_policy = _read(policy)
     new_policy = _remove_block(old_policy) if remove else _inject(old_policy)
     old_hooks = _read(hooks_path)
-    new_hooks = _hooks_new(old_hooks, remove)
+    # Uninstall on an untouched project must not create a hooks.json,
+    # and must not rewrite unrelated hooks merely to normalize formatting.
+    if remove and MARK not in old_hooks:
+        new_hooks = old_hooks
+    else:
+        new_hooks = _hooks_new(old_hooks, remove)
 
     # No side effects until both files have passed validation.
     messages: list[str] = []
