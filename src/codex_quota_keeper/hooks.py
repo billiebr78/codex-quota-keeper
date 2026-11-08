@@ -39,7 +39,7 @@ def _save(path: Path, state: dict) -> None:
 
 def process(payload: dict) -> dict | None:
     event = payload.get("hook_event_name")
-    if event not in ("UserPromptSubmit", "PostToolUse"):
+    if event not in ("UserPromptSubmit", "PostToolUse", "PostModelRequest"):
         return None
     session_id = payload.get("session_id")
     if not isinstance(session_id, str) or not session_id or len(session_id) > 512:
@@ -51,6 +51,41 @@ def process(payload: dict) -> dict | None:
             state = {}
     except (FileNotFoundError, OSError, ValueError):
         state = {}
+
+    if event == "PostModelRequest":
+        # PostModelRequest is diagnostic-only. Never inject context into model
+        # responses and never save prompts, errors, tool arguments or model text.
+        state["model_requests"] = max(0, state.get("model_requests", 0)) + 1 if type(
+            state.get("model_requests", 0)
+        ) is int else 1
+        status = payload.get("status")
+        if status in ("completed", "failed", "cancelled"):
+            statuses = state.get("model_status")
+            if not isinstance(statuses, dict):
+                statuses = {}
+            old_status = statuses.get(status, 0)
+            statuses[status] = (old_status if type(old_status) is int and old_status >= 0 else 0) + 1
+            state["model_status"] = statuses
+        usage = payload.get("token_usage")
+        if isinstance(usage, dict):
+            allowed = ("input_tokens", "cached_input_tokens", "output_tokens",
+                       "reasoning_output_tokens")
+            totals = state.get("model_tokens")
+            if not isinstance(totals, dict):
+                totals = {}
+            observed = False
+            for field in allowed:
+                value = usage.get(field)
+                if type(value) is int and value >= 0:
+                    old_value = totals.get(field, 0)
+                    totals[field] = (old_value if type(old_value) is int and old_value >= 0 else 0) + value
+                    observed = True
+            if observed:
+                state["model_tokens"] = totals
+                prev = state.get("token_usage_reports", 0)
+                state["token_usage_reports"] = (prev if type(prev) is int and prev >= 0 else 0) + 1
+        _save(path, state)
+        return None
 
     key = "prompts" if event == "UserPromptSubmit" else "tools"
     thresholds = PROMPT_THRESHOLDS if key == "prompts" else TOOL_THRESHOLDS
